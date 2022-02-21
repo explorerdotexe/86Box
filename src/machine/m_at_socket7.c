@@ -903,7 +903,7 @@ machine_at_r534f_init(const machine_t *model)
     int ret;
 
     ret = bios_load_linear("roms/machines/r534f/r534f008.bin",
-			   0x000e0000, 131072, 0);
+			   0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
 	return ret;
