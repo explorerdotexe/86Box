@@ -540,7 +540,9 @@ const machine_t machines[] = {
        This is basically an Intel Premiere/PCI II with a fancier POST screen. */
     { "[i430NX] AMBRA DP90 PCI",		"ambradp90",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 3380, 3520, 1.5, 1.5,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 2048, 131072, 2048, 127,	    machine_at_ambradp90_init, NULL			},
     /* Has AMI MegaKey KBC firmware. */
-    { "[i430NX] Gigabyte GA-586IP",		"430nx",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 60000000, 66666667, 3520, 3520, 1.5, 1.5,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 2048, 131072, 2048, 127,		machine_at_430nx_init, NULL			},
+    { "[i430NX] Gigabyte GA-586IP (128k)",		"430nx128",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 60000000, 66666667, 3520, 3520, 1.5, 1.5,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 2048, 131072, 2048, 127,		machine_at_430nx128_init, NULL			},
+	/* 256k ROM variant of GA-586IP. */
+    { "[i430NX] Gigabyte GA-586IP (256k)",		"430nx256",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 60000000, 66666667, 3520, 3520, 1.5, 1.5,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 2048, 131072, 2048, 127,		machine_at_430nx256_init, NULL			},
 
     /* 430FX */
     /* Uses an ACER/NEC 90M002A (UPD82C42C, 8042 clone) with unknown firmware (V5.0). */
