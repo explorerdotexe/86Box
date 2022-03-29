@@ -442,7 +442,8 @@ extern const device_t	*at_pb520r_get_device(void);
 /* m_at_socket5.c */
 extern int	machine_at_plato_init(const machine_t *);
 extern int	machine_at_ambradp90_init(const machine_t *);
-extern int	machine_at_430nx_init(const machine_t *);
+extern int	machine_at_430nx128_init(const machine_t *);
+extern int	machine_at_430nx256_init(const machine_t *);
 
 extern int	machine_at_acerv30_init(const machine_t *);
 extern int	machine_at_apollo_init(const machine_t *);
