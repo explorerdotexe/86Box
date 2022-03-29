@@ -107,7 +107,7 @@ machine_at_430nx256_init(const machine_t *model)
 {
     int ret;
 
-    ret = bios_load_linear("roms/machines/430nx256/IP.20",
+    ret = bios_load_linear("roms/machines/430nx256/256k.20",
 			   0x000c0000, 262144, 0);
 
     if (bios_only || !ret)
