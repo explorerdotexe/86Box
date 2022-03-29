@@ -18,9 +18,9 @@ version: 1
 AppDir:
   path: ./archive_tmp
   app_info:
-    id: !ENV 'net.${project_lower}.${project_lower}'
+    id: !ENV 'net.${project_lower}.${project}'
     name: !ENV '${project}'
-    icon: !ENV '${project_lower}'
+    icon: !ENV '${project_icon}'
     version: !ENV '${project_version}'
     exec: !ENV 'usr/local/bin/${project}'
     exec_args: $@
@@ -28,11 +28,11 @@ AppDir:
     arch: !ENV '${arch_deb}'
     sources:
     - sourceline: 'deb http://deb.debian.org/debian bullseye main'
-      key_url: 'https://ftp-master.debian.org/keys/archive-key-11.asc'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1f89983e0081fde018f3cc9673a4f27b8dd47936'
     - sourceline: 'deb http://security.debian.org/debian-security bullseye-security main'
-      key_url: 'https://ftp-master.debian.org/keys/archive-key-11.asc'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x1f89983e0081fde018f3cc9673a4f27b8dd47936'
     - sourceline: 'deb http://deb.debian.org/debian bullseye-updates main'
-      key_url: 'https://ftp-master.debian.org/keys/archive-key-11-security.asc'
+      key_url: 'https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xac530d520f2f3269f5e98313a48449044aad5c5d'
     include:
     - libevdev2
     - libfluidsynth2
@@ -51,45 +51,26 @@ AppDir:
     - libsndio7.0
     - libwayland-client0
     - libx11-6
+    - libx11-xcb1
     - libxcb1
+    - libxcb-render0
+    - libxcb-shape0
+    - libxcb-shm0
+    - libxcb-xfixes0
     - zlib1g
   files:
     exclude:
     - etc
     - lib/udev
     - opt/libc/usr/share
-    - usr/bin
-    - usr/include
+    - usr/[a-km-rt-zA-Z]*
     - usr/lib/*/libasound.so.*
+    - usr/lib/*.a
     - usr/lib/cmake
     - usr/lib/pkgconfig
-    - usr/sbin
-    - usr/share/aclocal
-    - usr/share/alsa
-    - usr/share/apport
-    - usr/share/bug
-    - usr/share/color
-    - usr/share/doc
-    - usr/share/doc-base
-    - usr/share/fontconfig
-    - usr/share/fonts
-    - usr/share/ghostscript
-    - usr/share/glib-2.0
-    - usr/share/info
-    - usr/share/libinput
-    - usr/share/libwacom
-    - usr/share/lintian
-    - usr/share/locale
-    - usr/share/man
-    - usr/share/metainfo
-    - usr/share/openal
-    - usr/share/pkgconfig
-    - usr/share/poppler
-    - usr/share/readline
-    - usr/share/rtmidi
-    - usr/share/sounds
-    - usr/share/X11
-    - usr/share/xml
+    - usr/s[a-gi-zA-Z]*
+    - usr/share/[a-hj-zA-Z]*
+    - usr/share/i[a-bd-zA-Z]*
     - var
 AppImage:
   arch: !ENV '${arch_appimage}'

@@ -407,6 +407,7 @@ extern int	machine_at_cmdpc_init(const machine_t *);
 extern int	machine_at_portableii_init(const machine_t *);
 extern int	machine_at_portableiii_init(const machine_t *);
 extern int	machine_at_portableiii386_init(const machine_t *);
+extern int	machine_at_deskpro386_init(const machine_t *);
 #ifdef EMU_DEVICE_H
 extern const device_t 	*at_cpqiii_get_device(void);
 #endif
@@ -613,6 +614,9 @@ extern int	machine_at_s370sba_init(const machine_t *);
 extern int	machine_at_apas3_init(const machine_t *);
 extern int	machine_at_gt694va_init(const machine_t *);
 extern int	machine_at_cuv4xls_init(const machine_t *);
+#ifdef EMU_DEVICE_H
+extern const device_t 	*at_cuv4xls_get_device(void);
+#endif
 extern int	machine_at_6via90ap_init(const machine_t *);
 extern int	machine_at_s1857_init(const machine_t *);
 extern int	machine_at_p6bap_init(const machine_t *);
@@ -703,6 +707,7 @@ extern int	machine_xt_mpc1600_init(const machine_t *);
 extern int	machine_xt_pcspirit_init(const machine_t *);
 extern int	machine_xt_pc700_init(const machine_t *);
 extern int	machine_xt_pc500_init(const machine_t *);
+extern int	machine_xt_vendex_init(const machine_t *);
 extern int	machine_xt_znic_init(const machine_t *);
 
 extern int	machine_xt_iskra3104_init(const machine_t *);

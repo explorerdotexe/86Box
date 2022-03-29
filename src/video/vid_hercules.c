@@ -610,42 +610,32 @@ speed_changed(void *priv)
 
 
 static const device_config_t hercules_config[] = {
+// clang-format off
     {
-	"rgb_type", "Display type", CONFIG_SELECTION, "", 0, "", { 0 },
-	{
-		{
-			"Default", 0
-		},
-		{
-			"Green", 1
-		},
-		{
-			"Amber", 2
-		},
-		{
-			"Gray", 3
-		},
-		{
-			""
-		}
-	}
+        "rgb_type", "Display type", CONFIG_SELECTION, "", 0, "", { 0 },
+        {
+            { "Default", 0 },
+            { "Green",   1 },
+            { "Amber",   2 },
+            { "Gray",    3 },
+            { ""           }
+        }
     },
-    {
-	"blend", "Blend", CONFIG_BINARY, "", 1
-    },
-    {
-	"", "", -1
-    }
+    { "blend", "Blend", CONFIG_BINARY, "",  1 },
+    { "",      "",                         -1 }
+// clang-format on
 };
 
 const device_t hercules_device = {
-    "Hercules",
-    "hercules",
-    DEVICE_ISA,
-    0,
-    hercules_init, hercules_close, NULL,
-    { NULL },
-    speed_changed,
-    NULL,
-    hercules_config
+    .name = "Hercules",
+    .internal_name = "hercules",
+    .flags = DEVICE_ISA,
+    .local = 0,
+    .init = hercules_init,
+    .close = hercules_close,
+    .reset = NULL,
+    { .available = NULL },
+    .speed_changed = speed_changed,
+    .force_redraw = NULL,
+    .config = hercules_config
 };

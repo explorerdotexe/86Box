@@ -34,7 +34,7 @@
 #
 
 # Define common functions.
-alias is_windows='[ ! -z "$MSYSTEM" ]'
+alias is_windows='[ -n "$MSYSTEM" ]'
 alias is_mac='uname -s | grep -q Darwin'
 
 make_tar() {
@@ -62,7 +62,7 @@ make_tar() {
 	fi
 
 	# Make tar verbose if requested.
-	[ ! -z "$VERBOSE" ] && local compression_flag="$compression_flag -v"
+	[ -n "$VERBOSE" ] && local compression_flag="$compression_flag -v"
 
 	# tar is notorious for having many diverging implementations. For instance,
 	# the flags we use to strip UID/GID metadata can be --owner/group (GNU),
@@ -136,7 +136,7 @@ done
 cmake_flags_extra=
 
 # Check if mandatory arguments were specified.
-if [ -z "$package_name" -a -z "$tarball_name" ] || [ ! -z "$package_name" -a -z "$arch" ]
+if [ -z "$package_name" -a -z "$tarball_name" ] || [ -n "$package_name" -a -z "$arch" ]
 then
 	echo '[!] Usage: build.sh -b {package_name} {architecture} [-t] [cmake_flags...]'
 	echo '           build.sh -s {source_tarball_name}'
@@ -147,7 +147,7 @@ fi
 cd "$(dirname "$0")/.."
 
 # Make source tarball if requested.
-if [ ! -z "$tarball_name" ]
+if [ -n "$tarball_name" ]
 then
 	echo [-] Making source tarball [$tarball_name]
 
@@ -211,6 +211,107 @@ then
 	fi
 	echo [-] Using MSYSTEM [$MSYSTEM]
 
+	# Update keyring, as the package signing keys sometimes change.
+	echo [-] Updating package databases and keyring
+	yes | pacman -Sy --needed msys2-keyring
+
+	# Query installed packages.
+	pacman -Qe > pacman.txt
+
+	# Download the specified versions of architecture-specific dependencies.
+	echo -n [-] Downloading dependencies:
+	pkg_dir="/var/cache/pacman/pkg"
+	repo_base="https://repo.msys2.org/mingw/$(echo $MSYSTEM | tr '[:upper:]' '[:lower:]')"
+	cat .ci/dependencies_msys.txt | tr -d '\r' > deps.txt
+	pkgs=""
+	while IFS=" " read pkg version
+	do
+		prefixed_pkg="$MINGW_PACKAGE_PREFIX-$pkg"
+		installed_version=$(grep -E "^$prefixed_pkg " pacman.txt | cut -d " " -f 2)
+		if [ "$installed_version" != "$version" ] # installed_version will be empty if not installed
+		then
+			echo -n " [$pkg"
+
+			# Download package if not already present in the local cache.
+			pkg_tar="$prefixed_pkg-$version-any.pkg.tar"
+			if [ -s "$pkg_dir/$pkg_tar.xz" ]
+			then
+				pkg_fn="$pkg_tar.xz"
+				pkg_dest="$pkg_dir/$pkg_fn"
+			else
+				pkg_fn="$pkg_tar.zst"
+				pkg_dest="$pkg_dir/$pkg_fn"
+				if [ ! -s "$pkg_dest" ]
+				then
+					if ! wget -qO "$pkg_dest" "$repo_base/$pkg_fn"
+					then
+						rm -f "$pkg_dest"
+						pkg_fn="$pkg_tar.xz"
+						pkg_dest="$pkg_dir/$pkg_fn"
+						wget -qO "$pkg_dest" "$repo_base/$pkg_fn" || rm -f "$pkg_dest"
+					fi
+					if [ -s "$pkg_dest" ]
+					then
+						wget -qO "$pkg_dest.sig" "$repo_base/$pkg_fn.sig" || rm -f "$pkg_dest.sig"
+						[ ! -s "$pkg_dest.sig" ] && rm -f "$pkg_dest.sig"
+					fi
+				fi
+			fi
+
+			# Check if the cached package is valid.
+			if [ -s "$pkg_dest" ]
+			then
+				# Add cached zst package.
+				pkgs="$pkgs $pkg_fn"
+			else
+				# Not valid, remove if it exists.
+				rm -f "$pkg_dest" "$pkg_dest.sig"
+				echo -n " FAIL"
+			fi
+			echo -n "]"
+		fi
+	done < deps.txt
+	[ -z "$pkgs" ] && echo -n ' none required'
+	echo
+
+	# Install the downloaded architecture-specific dependencies.
+	echo [-] Installing dependencies through pacman
+	if [ -n "$pkgs" ]
+	then
+		pushd "$pkg_dir"
+		yes | pacman -U --needed $pkgs
+		if [ $? -ne 0 ]
+		then
+			# Install packages individually if installing them all together failed.
+			for pkg in $pkgs
+			do
+				yes | pacman -U --needed "$pkg"
+			done
+		fi
+		popd
+
+		# Query installed packages again.
+		pacman -Qe > pacman.txt
+	fi
+
+	# Install the latest versions for any missing packages (if the specified version couldn't be installed).
+	pkgs="git"
+	while IFS=" " read pkg version
+	do
+		prefixed_pkg="$MINGW_PACKAGE_PREFIX-$pkg"
+		grep -qE "^$prefixed_pkg " pacman.txt || pkgs="$pkgs $prefixed_pkg"
+	done < deps.txt
+	rm -f pacman.txt deps.txt
+	yes | pacman -S --needed $pkgs
+	if [ $? -ne 0 ]
+	then
+		# Install packages individually if installing them all together failed.
+		for pkg in $pkgs
+		do
+			yes | pacman -S --needed "$pkg"
+		done
+	fi
+
 	# Point CMake to the toolchain file.
 	cmake_flags_extra="$cmake_flags_extra -D \"CMAKE_TOOLCHAIN_FILE=cmake/$toolchain.cmake\""
 elif is_mac
@@ -227,7 +328,7 @@ else
 	esac
 
 	# Establish general dependencies.
-	pkgs="cmake pkg-config git imagemagick wget p7zip-full wayland-protocols tar gzip"
+	pkgs="cmake ninja-build pkg-config git wget p7zip-full wayland-protocols tar gzip file"
 	if [ "$(dpkg --print-architecture)" = "$arch_deb" ]
 	then
 		pkgs="$pkgs build-essential"
@@ -242,7 +343,7 @@ else
 	# ...and the ones we do want listed. Non-dev packages fill missing spots on the list.
 	libpkgs=""
 	longest_libpkg=0
-	for pkg in libc6-dev libstdc++6 libopenal-dev libfreetype6-dev libx11-dev libsdl2-dev libpng-dev librtmidi-dev qtdeclarative5-dev libwayland-dev libevdev-dev libglib2.0-dev libslirp-dev
+	for pkg in libc6-dev libstdc++6 libopenal-dev libfreetype6-dev libx11-dev libsdl2-dev libpng-dev librtmidi-dev qtdeclarative5-dev libwayland-dev libevdev-dev libglib2.0-dev libslirp-dev libfaudio-dev libaudio-dev libjack-jackd2-dev libpipewire-0.3-dev libsamplerate0-dev libsndio-dev
 	do
 		libpkgs="$libpkgs $pkg:$arch_deb"
 		length=$(echo -n $pkg | sed 's/-dev$//' | sed "s/qtdeclarative/qt/" | wc -c)
@@ -298,16 +399,13 @@ EOF
 
 	# Link against the system libslirp instead of compiling ours.
 	cmake_flags_extra="$cmake_flags_extra -D SLIRP_EXTERNAL=ON"
-
-	# Use OpenAL for Linux builds before FAudio builds are set up.
-	cmake_flags_extra="$cmake_flags_extra -D OPENAL=ON"
 fi
 
 # Clean workspace.
 echo [-] Cleaning workspace
 if [ -d "build" ]
 then
-	MAKEFLAGS=-j$(nproc) cmake --build build --target clean 2> /dev/null
+	cmake --build build -j$(nproc) --target clean 2> /dev/null
 	rm -rf build
 fi
 find . \( -name Makefile -o -name CMakeCache.txt -o -name CMakeFiles \) -exec rm -rf "{}" \; 2> /dev/null
@@ -327,20 +425,20 @@ if [ "$CI" = "true" ]
 then
 	# Backup strategy when running under Jenkins.
 	[ -z "$git_hash" ] && git_hash=$(echo $GIT_COMMIT | cut -c 1-8)
-elif [ ! -z "$git_hash" ]
+elif [ -n "$git_hash" ]
 then
 	# Append + to denote a dirty tree.
 	git diff --quiet 2> /dev/null || git_hash="$git_hash+"
 fi
-[ ! -z "$git_hash" ] && cmake_flags_extra="$cmake_flags_extra -D \"EMU_GIT_HASH=$git_hash\""
+[ -n "$git_hash" ] && cmake_flags_extra="$cmake_flags_extra -D \"EMU_GIT_HASH=$git_hash\""
 
 # Add copyright year.
 year=$(date +%Y)
-[ ! -z "$year" ] && cmake_flags_extra="$cmake_flags_extra -D \"EMU_COPYRIGHT_YEAR=$year\""
+[ -n "$year" ] && cmake_flags_extra="$cmake_flags_extra -D \"EMU_COPYRIGHT_YEAR=$year\""
 
 # Run CMake.
 echo [-] Running CMake with flags [$cmake_flags $cmake_flags_extra]
-eval cmake -G \"Unix Makefiles\" -B build $cmake_flags $cmake_flags_extra .
+eval cmake -G Ninja $cmake_flags $cmake_flags_extra -S . -B build
 status=$?
 if [ $status -ne 0 ]
 then
@@ -349,13 +447,12 @@ then
 fi
 
 # Run actual build.
-make_flags=-j$(nproc)
-echo [-] Running build with make flags [$make_flags]
-MAKEFLAGS=$make_flags cmake --build build
+echo [-] Running build
+cmake --build build -j$(nproc)
 status=$?
 if [ $status -ne 0 ]
 then
-	echo [!] Make failed with status [$status]
+	echo [!] Build failed with status [$status]
 	exit 4
 fi
 
@@ -432,52 +529,69 @@ then
 else
 	cwd_root=$(pwd)
 
-	# Build openal-soft 1.21.1 manually to fix audio issues. This is a temporary
-	# workaround until a newer version of openal-soft trickles down to Debian repos.
-	if [ -d "openal-soft-1.21.1" ]
+	if grep -q "OPENAL:BOOL=ON" build/CMakeCache.txt
 	then
-		rm -rf openal-soft-1.21.1/build/*
+		# Build openal-soft 1.21.1 manually to fix audio issues. This is a temporary
+		# workaround until a newer version of openal-soft trickles down to Debian repos.
+		if [ -d "openal-soft-1.21.1" ]
+		then
+			rm -rf openal-soft-1.21.1/build
+		else
+			wget -qO - https://github.com/kcat/openal-soft/archive/refs/tags/1.21.1.tar.gz | tar zxf -
+		fi
+		cmake -G Ninja -D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" -S openal-soft-1.21.1 -B openal-soft-1.21.1/build || exit 99
+		cmake --build openal-soft-1.21.1/build -j$(nproc) || exit 99
+		cmake --install openal-soft-1.21.1/build || exit 99
+
+		# Build SDL2 without sound systems.
+		sdl_ss=OFF
 	else
-		wget -qO - https://github.com/kcat/openal-soft/archive/refs/tags/1.21.1.tar.gz | tar zxf -
+		# Build FAudio 22.03 manually to remove the dependency on GStreamer. This is a temporary
+		# workaround until a newer version of FAudio trickles down to Debian repos.
+		if [ -d "FAudio-22.03" ]
+		then
+			rm -rf FAudio-22.03/build
+		else
+			wget -qO - https://github.com/FNA-XNA/FAudio/archive/refs/tags/22.03.tar.gz | tar zxf -
+		fi
+		cmake -G Ninja -D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" -S FAudio-22.03 -B FAudio-22.03/build || exit 99
+		cmake --build FAudio-22.03/build -j$(nproc) || exit 99
+		cmake --install FAudio-22.03/build || exit 99
+
+		# Build SDL2 with sound systems.
+		sdl_ss=ON
 	fi
-	cd openal-soft-1.21.1/build
-	[ -e Makefile ] && make clean
-	cmake -G "Unix Makefiles" -D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" ..
-	make -j$(nproc) install || exit 99
-	cd "$cwd_root"
 
 	# Build rtmidi without JACK support to remove the dependency on libjack.
 	if [ -d "rtmidi-4.0.0" ]
 	then
-		rm -rf rtmidi-4.0.0/CMakeCache.txt rtmidi-4.0.0/CMakeFiles
+		rm -rf rtmidi-4.0.0/build
 	else
 		wget -qO - http://www.music.mcgill.ca/~gary/rtmidi/release/rtmidi-4.0.0.tar.gz | tar zxf -
 	fi
-	cwd_root=$(pwd)
-	cd rtmidi-4.0.0
-	[ -e Makefile ] && make clean
-	cmake -G "Unix Makefiles" -D RTMIDI_API_JACK=OFF -D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" .
-	make -j$(nproc) install || exit 99
-	cd "$cwd_root"
+	cmake -G Ninja -D RTMIDI_API_JACK=OFF -D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" -S rtmidi-4.0.0 -B rtmidi-4.0.0/build || exit 99
+	cmake --build rtmidi-4.0.0/build -j$(nproc) || exit 99
+	cmake --install rtmidi-4.0.0/build || exit 99
 
-	# Build SDL2 for joystick support with most components disabled to remove the dependencies on PulseAudio and libdrm.
+	# Build SDL2 for joystick and FAudio support, with most components
+	# disabled to remove the dependencies on PulseAudio and libdrm.
 	if [ ! -d "SDL2-2.0.20" ]
 	then
 		wget -qO - https://www.libsdl.org/release/SDL2-2.0.20.tar.gz | tar zxf -
 	fi
 	rm -rf sdlbuild
 	mkdir sdlbuild
-	cd sdlbuild
-	cmake -G "Unix Makefiles" -D SDL_DISKAUDIO=OFF -D SDL_DIRECTFB_SHARED=OFF -D SDL_OPENGL=OFF -D SDL_OPENGLES=OFF -D SDL_OSS=OFF -D SDL_ALSA=OFF \
-		-D SDL_ALSA_SHARED=OFF -D SDL_JACK=OFF -D SDL_JACK_SHARED=OFF -D SDL_ESD=OFF -D SDL_ESD_SHARED=OFF -D SDL_PIPEWIRE=OFF -D SDL_PIPEWIRE_SHARED=OFF \
-		-D SDL_PULSEAUDIO=OFF -D SDL_PULSEAUDIO_SHARED=OFF -D SDL_ARTS=OFF -D SDL_ARTS_SHARED=OFF -D SDL_NAS=OFF -D SDL_NAS_SHARED=OFF -D SDL_SNDIO=OFF \
-		-D SDL_SNDIO_SHARED=OFF -D SDL_FUSIONSOUND=OFF -D SDL_FUSIONSOUND_SHARED=OFF -D SDL_LIBSAMPLERATE=OFF -D SDL_LIBSAMPLERATE_SHARED=OFF -D SDL_X11=OFF \
-		-D SDL_X11_SHARED=OFF -D SDL_WAYLAND=OFF -D SDL_WAYLAND_SHARED=OFF -D SDL_WAYLAND_LIBDECOR=OFF -D SDL_WAYLAND_LIBDECOR_SHARED=OFF \
-		-D SDL_WAYLAND_QT_TOUCH=OFF -D SDL_RPI=OFF -D SDL_VIVANTE=OFF -D SDL_VULKAN=OFF -D SDL_KMSDRM=OFF -D SDL_KMSDRM_SHARED=OFF -D SDL_OFFSCREEN=OFF \
-		-D SDL_HIDAPI_JOYSTICK=ON -D SDL_VIRTUAL_JOYSTICK=ON -D SDL_SHARED=ON -D SDL_STATIC=OFF -S "$cwd_root/SDL2-2.0.20" \
-		-D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr"
-	make -j$(nproc) install || exit 99
-	cd "$cwd_root"
+	cmake -G Ninja -D SDL_DISKAUDIO=OFF -D SDL_DIRECTFB_SHARED=OFF -D SDL_OPENGL=OFF -D SDL_OPENGLES=OFF -D SDL_OSS=OFF -D SDL_ALSA=$sdl_ss \
+		-D SDL_ALSA_SHARED=$sdl_ss -D SDL_JACK=$sdl_ss -D SDL_JACK_SHARED=$sdl_ss -D SDL_ESD=OFF -D SDL_ESD_SHARED=OFF -D SDL_PIPEWIRE=$sdl_ss \
+		-D SDL_PIPEWIRE_SHARED=$sdl_ss -D SDL_PULSEAUDIO=$sdl_ss -D SDL_PULSEAUDIO_SHARED=$sdl_ss -D SDL_ARTS=OFF -D SDL_ARTS_SHARED=OFF \
+		-D SDL_NAS=$sdl_ss -D SDL_NAS_SHARED=$sdl_ss -D SDL_SNDIO=$sdl_ss -D SDL_SNDIO_SHARED=$sdl_ss -D SDL_FUSIONSOUND=OFF \
+		-D SDL_FUSIONSOUND_SHARED=OFF -D SDL_LIBSAMPLERATE=$sdl_ss -D SDL_LIBSAMPLERATE_SHARED=$sdl_ss -D SDL_X11=OFF -D SDL_X11_SHARED=OFF \
+		-D SDL_WAYLAND=OFF -D SDL_WAYLAND_SHARED=OFF -D SDL_WAYLAND_LIBDECOR=OFF -D SDL_WAYLAND_LIBDECOR_SHARED=OFF -D SDL_WAYLAND_QT_TOUCH=OFF \
+		-D SDL_RPI=OFF -D SDL_VIVANTE=OFF -D SDL_VULKAN=OFF -D SDL_KMSDRM=OFF -D SDL_KMSDRM_SHARED=OFF -D SDL_OFFSCREEN=OFF \
+		-D SDL_HIDAPI_JOYSTICK=ON -D SDL_VIRTUAL_JOYSTICK=ON -D SDL_SHARED=ON -D SDL_STATIC=OFF -S SDL2-2.0.20 -B sdlbuild \
+		-D "CMAKE_TOOLCHAIN_FILE=$cwd_root/toolchain.cmake" -D "CMAKE_INSTALL_PREFIX=$cwd_root/archive_tmp/usr" || exit 99
+	cmake --build sdlbuild -j$(nproc) || exit 99
+	cmake --install sdlbuild || exit 99
 
 	# Archive Discord Game SDK library.
 	7z e -y -o"archive_tmp/usr/lib" discord_game_sdk.zip "lib/$arch_discord/discord_game_sdk.so"
@@ -494,11 +608,11 @@ else
 		echo $pkg $version >> archive_tmp/README
 	done
 
-	# Archive icon, while also shrinking it to 512x512 if necessary.
-	convert src/win/assets/$project_lower.png -resize '512x512>' icon.png
-	icon_base="$(identify -format 'archive_tmp/usr/share/icons/%wx%h' icon.png)"
+	# Archive icons.
+	icon_base=archive_tmp/usr/share/icons
 	mkdir -p "$icon_base"
-	mv icon.png "$icon_base/$project_lower.png"
+	cp -rp src/unix/assets/[0-9]*x[0-9]* "$icon_base/"
+	icon_name=$(ls "$icon_base/"[0-9]*x[0-9]*/* | head -1 | grep -oP '/\K([^/]+)(?=\.[^\.]+$)')
 
 	# Archive executable, while also stripping it if requested.
 	mkdir -p archive_tmp/usr/local/bin
@@ -544,7 +658,7 @@ else
 	project_version=$(grep -oP '#define\s+EMU_VERSION\s+"\K([^"]+)' "build/src/include/$project_lower/version.h" 2> /dev/null)
 	[ -z "$project_version" ] && project_version=unknown
 	build_num=$(grep -oP '#define\s+EMU_BUILD_NUM\s+\K([0-9]+)' "build/src/include/$project_lower/version.h" 2> /dev/null)
-	[ ! -z "$build_num" -a "$build_num" != "0" ] && project_version="$project_version-b$build_num"
+	[ -n "$build_num" -a "$build_num" != "0" ] && project_version="$project_version-b$build_num"
 
 	# Download appimage-builder if necessary.
 	[ ! -e "appimage-builder.AppImage" ] && wget -qO appimage-builder.AppImage \
@@ -555,8 +669,8 @@ else
 	rm -rf "$project-"*".AppImage"
 
 	# Run appimage-builder in extract-and-run mode for Docker compatibility.
-	project="$project" project_lower="$project_lower" project_version="$project_version" arch_deb="$arch_deb" arch_appimage="$arch_appimage" \
-		APPIMAGE_EXTRACT_AND_RUN=1 ./appimage-builder.AppImage --recipe .ci/AppImageBuilder.yml
+	project="$project" project_lower="$project_lower" project_version="$project_version" project_icon="$icon_name" arch_deb="$arch_deb" \
+		arch_appimage="$arch_appimage" APPIMAGE_EXTRACT_AND_RUN=1 ./appimage-builder.AppImage --recipe .ci/AppImageBuilder.yml
 	status=$?
 
 	# Rename AppImage to the final name if the build succeeded.

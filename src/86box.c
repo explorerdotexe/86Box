@@ -93,6 +93,7 @@
 #include <86box/ui.h>
 #include <86box/plat.h>
 #include <86box/version.h>
+#include <86box/gdbstub.h>
 
 
 /* Stuff that used to be globally declared in plat.h but is now extern there
@@ -710,7 +711,11 @@ usage:
 	if (rom_path[0] != '\0')
 		pclog("# ROM path: %s\n", rom_path);
 	else
-		pclog("# ROM path: %sroms\\\n", exe_path);
+#ifndef _WIN32
+	pclog("# ROM path: %sroms/\n", exe_path);
+#else
+	pclog("# ROM path: %sroms\\\n", exe_path);
+#endif
 	pclog("# Configuration file: %s\n#\n\n", cfg_path);
 	/*
 	 * We are about to read the configuration file, which MAY
@@ -731,6 +736,8 @@ usage:
 	/* Load the desired language */
 	if (lang_init)
 		lang_id = lang_init;
+
+	gdbstub_init();
 
 	/* All good! */
 	return(1);
@@ -931,7 +938,9 @@ pc_reset_hard_close(void)
 
 	scsi_device_close_all();
 
-	midi_close();
+	midi_out_close();
+
+	midi_in_close();
 
 	cdrom_close();
 
@@ -1154,7 +1163,9 @@ pc_close(thread_t *ptr)
 
 	scsi_device_close_all();
 
-	midi_close();
+	midi_out_close();
+
+	midi_in_close();
 
 	network_close();
 
@@ -1167,6 +1178,8 @@ pc_close(thread_t *ptr)
 	mo_close();
 
 	scsi_disk_close();
+
+	gdbstub_close();
 }
 
 
@@ -1195,6 +1208,9 @@ pc_run(void)
 	/* Run a block of code. */
 	startblit();
 	cpu_exec(cpu_s->rspeed / 100);
+#ifdef USE_GDBSTUB /* avoid a KBC FIFO overflow when CPU emulation is stalled */
+	if (gdbstub_step == GDBSTUB_EXEC)
+#endif
 	mouse_process();
 	joystick_process();
 	endblit();

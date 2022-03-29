@@ -327,42 +327,32 @@ void mda_speed_changed(void *p)
         mda_recalctimings(mda);
 }
 
-static const device_config_t mda_config[] =
-{
+static const device_config_t mda_config[] = {
+// clang-format off
+    {
+        "rgb_type", "Display type", CONFIG_SELECTION, "", 0, "", { 0 },
         {
-                "rgb_type", "Display type", CONFIG_SELECTION, "", 0, "", { 0 },
-                {
-                        {
-                                "Default", 0
-                        },
-                        {
-                                "Green", 1
-                        },
-                        {
-                                "Amber", 2
-                        },
-                        {
-                                "Gray", 3
-                        },
-                        {
-                                ""
-                        }
-                }
-        },
-        {
-                "", "", -1
+            { "Default", 0 },
+            { "Green", 1 },
+            { "Amber", 2 },
+            { "Gray", 3 },
+            { "" }
         }
+    },
+    { "", "", -1 }
+// clang-format on
 };
 
-
-const device_t mda_device =
-{
-        "MDA",
-        "mda",
-        DEVICE_ISA, 0,
-        mda_standalone_init, mda_close, NULL,
-        { NULL },
-        mda_speed_changed,
-        NULL,
-	mda_config
+const device_t mda_device = {
+    .name = "MDA",
+    .internal_name = "mda",
+    .flags = DEVICE_ISA,
+    .local = 0,
+    .init = mda_standalone_init,
+    .close = mda_close,
+    .reset = NULL,
+    { .available = NULL },
+    .speed_changed = mda_speed_changed,
+    .force_redraw = NULL,
+    .config = mda_config
 };

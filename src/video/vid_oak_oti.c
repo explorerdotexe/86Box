@@ -495,140 +495,117 @@ static int
 oti067_m300_available(void)
 {
     if (rom_present(BIOS_067_M300_15_PATH))
-		return(rom_present(BIOS_067_M300_15_PATH));
-	else
-		return(rom_present(BIOS_067_M300_08_PATH));
+        return(rom_present(BIOS_067_M300_15_PATH));
+    else
+        return(rom_present(BIOS_067_M300_08_PATH));
 }
 
 
-static const device_config_t oti067_config[] =
-{
-	{
-		"memory", "Memory size", CONFIG_SELECTION, "", 512, "", { 0 },
-		{
-			{
-				"256 kB", 256
-			},
-			{
-				"512 kB", 512
-			},
-			{
-				""
-			}
-		}
-	},
-	{
-		"", "", -1
-	}
+// clang-format off
+static const device_config_t oti067_config[] = {
+    {
+        "memory", "Memory size", CONFIG_SELECTION, "", 512, "", { 0 },
+        {
+            { "256 kB", 256 },
+            { "512 kB", 512 },
+            { ""            }
+        }
+    },
+    { "", "", -1 }
 };
 
-
-static const device_config_t oti067_ama932j_config[] =
-{
-	{
-		"memory", "Memory size", CONFIG_SELECTION, "", 256, "", { 0 },
-		{
-			{
-				"256 kB", 256
-			},
-			{
-				"512 kB", 512
-			},
-			{
-				""
-			}
-		}
-	},
-	{
-		"", "", -1
-	}
+static const device_config_t oti067_ama932j_config[] = {
+    {
+        "memory", "Memory size", CONFIG_SELECTION, "", 256, "", { 0 },
+        {
+            { "256 kB", 256 },
+            { "512 kB", 512 },
+            { ""            }
+        }
+    },
+    { "", "", -1 }
 };
 
+static const device_config_t oti077_config[] = {
+    {
+        "memory", "Memory size", CONFIG_SELECTION, "", 1024, "", { 0 },
+        {
+            { "256 kB", 256 },
+            { "512 kB", 512 },
+            { "1 MB", 1024 },
+            { "" }
+        }
+    },
+    { "", "", -1 }
+};
+// clang-format on
 
-static const device_config_t oti077_config[] =
-{
-	{
-		"memory", "Memory size", CONFIG_SELECTION, "", 1024, "", { 0 },
-		{
-			{
-				"256 kB", 256
-			},
-			{
-				"512 kB", 512
-			},
-			{
-				"1 MB", 1024
-			},
-			{
-				""
-			}
-		}
-	},
-	{
-		"", "", -1
-	}
+const device_t oti037c_device = {
+    .name = "Oak OTI-037C",
+    .internal_name = "oti037c",
+    .flags = DEVICE_ISA,
+    .local = 0,
+    .init = oti_init,
+    .close = oti_close,
+    .reset = NULL,
+    { .available = oti037c_available },
+    .speed_changed = oti_speed_changed,
+    .force_redraw = oti_force_redraw,
+    .config = NULL
 };
 
-const device_t oti037c_device =
-{
-	"Oak OTI-037C",
-	"oti037c",
-	DEVICE_ISA,
-	0,
-	oti_init, oti_close, NULL,
-	{ oti037c_available },
-	oti_speed_changed,
-	oti_force_redraw
+const device_t oti067_device = {
+    .name = "Oak OTI-067",
+    .internal_name = "oti067",
+    .flags = DEVICE_ISA,
+    .local = 2,
+    .init = oti_init,
+    .close = oti_close,
+    .reset = NULL,
+    { .available = oti067_077_available },
+    .speed_changed = oti_speed_changed,
+    .force_redraw = oti_force_redraw,
+    .config = oti067_config
 };
 
-const device_t oti067_device =
-{
-	"Oak OTI-067",
-	"oti067",
-	DEVICE_ISA,
-	2,
-	oti_init, oti_close, NULL,
-	{ oti067_077_available },
-	oti_speed_changed,
-	oti_force_redraw,
-	oti067_config
+const device_t oti067_m300_device = {
+    .name = "Oak OTI-067 (Olivetti M300-08/15)",
+    .internal_name = "oti067_m300",
+    .flags = DEVICE_ISA,
+    .local = 4,
+    .init = oti_init,
+    .close = oti_close,
+    .reset = NULL,
+    { .available = oti067_m300_available },
+    .speed_changed = oti_speed_changed,
+    .force_redraw = oti_force_redraw,
+    .config = oti067_config
 };
 
-const device_t oti067_m300_device =
-{
-	"Oak OTI-067 (Olivetti M300-08/15)",
-	"oti067_m300",
-	DEVICE_ISA,
-	4,
-	oti_init, oti_close, NULL,
-	{ oti067_m300_available },
-	oti_speed_changed,
-	oti_force_redraw,
-	oti067_config
+const device_t oti067_ama932j_device = {
+    .name = "Oak OTI-067 (AMA-932J)",
+    .internal_name = "oti067_ama932j",
+    .flags = DEVICE_ISA,
+    .local = 3,
+    .init = oti_init,
+    .close = oti_close,
+    .reset = NULL,
+    { .available = oti067_ama932j_available },
+    .speed_changed = oti_speed_changed,
+    .force_redraw = oti_force_redraw,
+    .config = oti067_ama932j_config
 };
 
-const device_t oti067_ama932j_device =
-{
-	"Oak OTI-067 (AMA-932J)",
-	"oti067_ama932j",
-	DEVICE_ISA,
-	3,
-	oti_init, oti_close, NULL,
-	{ oti067_ama932j_available },
-	oti_speed_changed,
-	oti_force_redraw,
-	oti067_ama932j_config
-};
-
-const device_t oti077_device =
-{
-	"Oak OTI-077",
-	"oti077",
-	DEVICE_ISA,
-	5,
-	oti_init, oti_close, NULL,
-	{ oti067_077_available },
-	oti_speed_changed,
-	oti_force_redraw,
-	oti077_config
+const device_t oti077_device = {
+    .name = "Oak OTI-077",
+    .internal_name = "oti077",
+    .flags = DEVICE_ISA,
+    .local = 5,
+    .init = oti_init,
+    .close = oti_close,
+    .reset = NULL,
+    { .available = oti067_077_available },
+    .speed_changed = oti_speed_changed,
+    .force_redraw = oti_force_redraw,
+    .config = oti077_config
 };
