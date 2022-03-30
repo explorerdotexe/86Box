@@ -1,4 +1,4 @@
-DISCLAIMER: This is a highly experimental fork of 86Box which i use for testing, because of that there is no guarantee that anything added will work. This fork is in no way attempting to directly compete with 86Box or any other PC emulation projects.
+DISCLAIMER: This is a highly experimental fork of 86Box which i use for testing, because of that there is no guarantee that anything added will work, as this is mainly for my personal use. This fork is in no way attempting to directly compete with 86Box or any other PC emulation projects.
 
 86Box [![Build Status](http://ci.86box.net/job/86Box/badge/icon)](http://ci.86box.net/job/86Box)
 =====
