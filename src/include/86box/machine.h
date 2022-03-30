@@ -259,6 +259,7 @@ extern int	machine_at_ama932j_init(const machine_t *);
 extern int	machine_at_px286_init(const machine_t *);
 extern int	machine_at_quadt286_init(const machine_t *);
 extern int	machine_at_mr286_init(const machine_t *);
+extern int  machine_at_headland_init(const machine_t *);
 
 extern int	machine_at_neat_init(const machine_t *);
 extern int	machine_at_neat_ami_init(const machine_t *);
@@ -550,6 +551,8 @@ extern int	machine_at_5emapro_init(const machine_t *);
 /* m_at_socket8.c */
 extern int	machine_at_p6rp4_init(const machine_t *);
 
+extern int  machine_at_i440fx_init(const machine_t *);
+extern int  machine_at_s1668_init(const machine_t *);
 extern int	machine_at_686nx_init(const machine_t *);
 extern int	machine_at_acerv60n_init(const machine_t *);
 extern int	machine_at_vs440fx_init(const machine_t *);
@@ -585,6 +588,7 @@ extern int	machine_at_p6sba256_init(const machine_t *);
 extern int	machine_at_ficka6130_init(const machine_t *);
 extern int	machine_at_p3v133_init(const machine_t *);
 extern int	machine_at_p3v4x_init(const machine_t *);
+extern int	machine_at_ergox365_init(const machine_t *);
 
 extern int	machine_at_vei8_init(const machine_t *);
 
