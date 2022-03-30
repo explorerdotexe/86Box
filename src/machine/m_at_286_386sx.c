@@ -45,6 +45,41 @@
 #include <86box/flash.h>
 #include <86box/machine.h>
 
+
+static void
+machine_at_headland_common_init(int ht386)
+{
+    device_add(&keyboard_at_ami_device);
+
+    if (fdc_type == FDC_INTERNAL)
+    device_add(&fdc_at_device);
+
+    if (ht386)
+	device_add(&headland_ht18b_device);
+    else
+	device_add(&headland_gc10x_device);
+}
+
+
+int
+machine_at_headland_init(const machine_t *model)
+{
+    int ret;
+
+    ret = bios_load_linear("roms/machines/ami386/ami386.bin",
+			   0x000f0000, 65536, 0);
+
+    if (bios_only || !ret)
+	return ret;
+
+    machine_at_common_ide_init(model);
+
+    machine_at_headland_common_init(1);
+
+    return ret;
+}
+
+
 int
 machine_at_mr286_init(const machine_t *model)
 {
@@ -66,20 +101,6 @@ machine_at_mr286_init(const machine_t *model)
     return ret;
 }
 
-
-static void
-machine_at_headland_common_init(int ht386)
-{
-    device_add(&keyboard_at_ami_device);
-
-    if (fdc_type == FDC_INTERNAL)
-    device_add(&fdc_at_device);
-
-    if (ht386)
-	device_add(&headland_ht18b_device);
-    else
-	device_add(&headland_gc10x_device);
-}
 
 int
 machine_at_tg286m_init(const machine_t *model)
