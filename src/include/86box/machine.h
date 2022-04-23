@@ -117,6 +117,7 @@ enum {
     MACHINE_TYPE_SLOT1_370,
     MACHINE_TYPE_SLOT2,
     MACHINE_TYPE_SOCKET370,
+    MACHINE_TYPE_EBGA368,
     MACHINE_TYPE_MISC,
     MACHINE_TYPE_MAX
 };
@@ -354,7 +355,8 @@ extern int	machine_at_ami471_init(const machine_t *);
 extern int	machine_at_dtk486_init(const machine_t *);
 extern int	machine_at_px471_init(const machine_t *);
 extern int	machine_at_win471_init(const machine_t *);
-extern int	machine_at_vi15g_init(const machine_t *);
+extern int	machine_at_vi15g64_init(const machine_t *);
+extern int	machine_at_vi15g128_init(const machine_t *);
 extern int	machine_at_greenb_init(const machine_t *);
 
 extern int	machine_at_r418_init(const machine_t *);
@@ -373,6 +375,7 @@ extern int	machine_at_486vipio2_init(const machine_t *);
 extern int	machine_at_abpb4_init(const machine_t *);
 extern int	machine_at_win486pci_init(const machine_t *);
 extern int	machine_at_ms4145_init(const machine_t *);
+extern int  machine_at_ms4144_init(const machine_t *);
 extern int	machine_at_sbc490_init(const machine_t *);
 extern int	machine_at_tf486_init(const machine_t *);
 
@@ -452,6 +455,7 @@ extern int	machine_at_exp8551_init(const machine_t *);
 extern int	machine_at_zappa_init(const machine_t *);
 extern int	machine_at_powermatev_init(const machine_t *);
 extern int	machine_at_mb500n_init(const machine_t *);
+extern int  machine_at_president_init(const machine_t *);
 extern int	machine_at_hawk_init(const machine_t *);
 
 extern int	machine_at_pat54pv_init(const machine_t *);
@@ -511,6 +515,7 @@ extern int	machine_at_p55va_init(const machine_t *);
 extern int	machine_at_brio80xx_init(const machine_t *);
 extern int	machine_at_pb680_init(const machine_t *);
 extern int	machine_at_mb520n_init(const machine_t *);
+extern int  machine_at_j656vxd_init(const machine_t *);
 extern int	machine_at_i430vx_init(const machine_t *);
 
 extern int	machine_at_nupro592_init(const machine_t *);
@@ -626,6 +631,9 @@ extern const device_t 	*at_cuv4xls_get_device(void);
 extern int	machine_at_6via90ap_init(const machine_t *);
 extern int	machine_at_s1857_init(const machine_t *);
 extern int	machine_at_p6bap_init(const machine_t *);
+
+/* m_at_ebga368.c */
+extern int	machine_at_arb9673_init(const machine_t *);
 
 /* m_at_misc.c */
 extern int	machine_at_vpc2007_init(const machine_t *);
