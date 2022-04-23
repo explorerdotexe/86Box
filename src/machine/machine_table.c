@@ -57,6 +57,7 @@ const machine_type_t machine_types[] = {
     { "Slot 1/Socket 370",		MACHINE_TYPE_SLOT1_370	},
     { "Slot 2",				MACHINE_TYPE_SLOT2	},
     { "Socket 370",			MACHINE_TYPE_SOCKET370	},
+	{ "EBGA 368",			MACHINE_TYPE_EBGA368	},
     { "Miscellaneous",			MACHINE_TYPE_MISC    	}
 };
 
@@ -396,7 +397,9 @@ const machine_t machines[] = {
     /* Has JetKey 5 KBC Firmware which looks like it is a clone of AMIKey type F. */
     { "[OPTi 895] Jetway J-403TG Rev D (MR BIOS)","403tg_d_mr",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_VLB,									 1024, 65536, 1024, 127,	   machine_at_403tg_d_mr_init, NULL			},
     /* Has AMIKey H keyboard BIOS. */
-    { "[SiS 471] AOpen Vi15G",			"vi15g",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_VLB | MACHINE_IDE,							 1024, 65536, 1024, 127,		machine_at_vi15g_init, NULL			},
+    { "[SiS 471] AOpen Vi15G (64k)",			"vi15g64",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_VLB | MACHINE_IDE,							 1024, 65536, 1024, 127,		machine_at_vi15g64_init, NULL			},
+	/* Variant of the Vi15G with 128k ROM. */
+	{ "[SiS 471] AOpen Vi15G (128k)",			"vi15g128",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_VLB | MACHINE_IDE,							 1024, 65536, 1024, 127,		machine_at_vi15g128_init, NULL			},
     /* This has an AMIKey-2, which is an updated version of type 'H'. */
     { "[SiS 471] ASUS VL/I-486SV2G (GX4)",	"vli486sv2g",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_VLB | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 1024, 65536, 1024, 127,	   machine_at_vli486sv2g_init, NULL			},
     /* Has JetKey 5 KBC Firmware which looks like it is a clone of AMIKey type F. */
@@ -445,6 +448,8 @@ const machine_t machines[] = {
     { "[SiS 496] ASUS PVI-486SP3C",		"486sp3c",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_PCIV | MACHINE_BUS_PS2 |  MACHINE_IDE_DUAL,				 1024, 261120, 1024, 255,	      machine_at_486sp3c_init, NULL			},
     /* This has an AMIKey-2, which is an updated version of type 'H'. */
     { "[SiS 496] Lucky Star LS-486E",		"ls486e",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_PCI | MACHINE_IDE_DUAL,							 1024, 131072, 1024, 255,	       machine_at_ls486e_init, NULL			},
+	/* Uses AMIKEY-2 KBC, 072594 AMI. */
+	{ "[SiS 496] MSI MS-4144",		"ms4144",		MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_PCI | MACHINE_IDE_DUAL,							 1024, 131072, 1024, 255,	       machine_at_ms4144_init, NULL			},
     /* The BIOS does not send a single non-standard KBC command, so it has a standard PS/2 KBC. */
     { "[SiS 496] Micronics M4Li",		"m4li",			MACHINE_TYPE_486_S3,		CPU_PKG_SOCKET3, 0, 0, 0, 0, 0, 0, 0,										MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 1024, 131072, 1024, 127,		 machine_at_m4li_init, NULL			},
     /* Has a BestKey KBC which clones AMI type 'H'. */
@@ -561,6 +566,8 @@ const machine_t machines[] = {
     { "[i430FX] NEC PowerMate V",  		"powermatev",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 3380, 3520, 1.5, 2.0,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 8192, 131072, 8192, 127,	   machine_at_powermatev_init, NULL			},
     /* Has a VIA VT82C42N KBC. */
     { "[i430FX] PC Partner MB500N",		"mb500n",		MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 3380, 3520, 1.5, 3.0,							MACHINE_PCI | MACHINE_IDE_DUAL,							 8192, 131072, 8192, 127,	       machine_at_mb500n_init, NULL			},
+	/* Machine ported from #1844 */
+	{ "[i430FX] President Award 430FX PCI","president",			MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 3380, 3520, 1.5, 2.0,							MACHINE_PCI | MACHINE_VLB | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,							8192, 131072, 8192, 127,	       machine_at_president_init, NULL			},
     /* Has AMIKey Z(!) KBC firmware. */
     { "[i430FX] TriGem Hawk",			"hawk",			MACHINE_TYPE_SOCKET5,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 3380, 3520, 1.5, 2.0,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,				 8192, 131072, 8192, 127,		 machine_at_hawk_init, NULL			},
 
@@ -687,6 +694,8 @@ const machine_t machines[] = {
     /* This has the AMIKey 'H' firmware, possibly AMIKey-2. Photos show it with a BestKey, so it
        likely clones the behavior of AMIKey 'H'. */
     { "[i430VX] PC Partner MB520N",		"mb520n",		MACHINE_TYPE_SOCKET7,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 2600, 3520, 1.5, 3.0,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,		 		 8192, 131072, 8192, 127,	       machine_at_mb520n_init, NULL			},
+	/* Machine ported from #1844. */
+	{ "[i430VX] Jetway J656VXD",		"j656vxd",		MACHINE_TYPE_SOCKET7,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 2500, 3520, 1.5, 3.0,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL | MACHINE_GAMEPORT,		 8192, 131072, 8192, 127,	      machine_at_j656vxd_init, NULL			},
     /* This has a Holtek KBC and the BIOS does not send a single non-standard KBC command, so it
        must be an ASIC that clones the standard IBM PS/2 KBC. */
     { "[i430VX] Shuttle HOT-557",		"430vx",		MACHINE_TYPE_SOCKET7,		CPU_PKG_SOCKET5_7, 0, 50000000, 66666667, 2500, 3520, 1.5, 3.0,							MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL | MACHINE_GAMEPORT,		 8192, 131072, 8192, 127,	       machine_at_i430vx_init, NULL			},
@@ -926,6 +935,10 @@ const machine_t machines[] = {
     /* Has a Winbond W83977EF Super I/O chip with on-chip KBC with AMIKey-2 KBC
        firmware. */
     { "[VIA Apollo Pro 133A] BCM GT694VA",	"gt694va",		MACHINE_TYPE_SOCKET370,		CPU_PKG_SOCKET370, 0, 66666667, 133333333, 1300, 3500, 1.5, 8.0,						MACHINE_AGP | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL | MACHINE_SOUND,		16384,3145728, 8192, 255,	      machine_at_gt694va_init, at_gt694va_get_device	},
+
+    /* EBGA368 machines */
+    /* VIA Apollo Pro */
+    { "[VIA Apollo ProMedia] Acrosser AR-B9673","arb9673",		MACHINE_TYPE_EBGA368,		CPU_PKG_EBGA368, 0, 100000000, 133333333, 2050, 2050, MACHINE_MULTIPLIER_FIXED,					MACHINE_PCI | MACHINE_BUS_PS2 | MACHINE_IDE_DUAL,			       131072, 131072,    0,  31,	      machine_at_arb9673_init, NULL			},
 
     /* Miscellaneous/Fake/Hypervisor machines */
     /* Has a Winbond W83977F Super I/O chip with on-chip KBC with AMIKey-2 KBC
